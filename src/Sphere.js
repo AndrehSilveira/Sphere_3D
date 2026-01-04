@@ -46,13 +46,16 @@ const Sphere = () => {
 
         const flagMaterial = new THREE.MeshBasicMaterial({
           map: texture,
-          side: THREE.DoubleSide, // Visível dos dois lados
+          side: THREE.DoubleSide, // Visível nos dois lados
         });
         const flagPlane = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1), flagMaterial);
 
         // Coordenadas esféricas ajustadas (latitude e longitude)
         const latitude =
           ((index % numLatitudes) - numLatitudes / 2) * (Math.PI / numLatitudes); // Linhas horizontais
+
+        // Excluir bandeiras nos polos
+        if (latitude === Math.PI / 2 || latitude === -Math.PI / 2) return; // Excluir polo sul e polo norte
 
         const isNearPole = Math.abs(latitude) > Math.PI / 3;
         const numFlagsThisLatitude = isNearPole ? 6 : flagUrls.length; // Máximo de 6 bandeiras próximo aos polos
