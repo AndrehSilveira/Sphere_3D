@@ -22,7 +22,7 @@ const Sphere = () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     currentRef.appendChild(renderer.domElement);
 
-    // Fundo claro para destacar elementos
+    // Fundo claro
     scene.background = new THREE.Color(0xf0f0f0);
 
     // Adicionar luzes
@@ -31,10 +31,19 @@ const Sphere = () => {
     directionalLight.position.set(10, 10, 10);
     scene.add(ambientLight, directionalLight);
 
+    // Criar esfera branca opaca
+    const sphereGeometry = new THREE.SphereGeometry(5, 32, 32); // Raio de 5, subdivisão alta para suavidade
+    const sphereMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff, // Branco
+      side: THREE.FrontSide, // Renderizar apenas a frente
+    });
+    const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
+    scene.add(sphereMesh);
+
     // Criar grupo para bandeiras
     const sphereGroup = new THREE.Group();
+    
     const radius = 5; // Raio da esfera
-
     const numLatitudes = 10; // Número de faixas horizontais de latitude
 
     flagUrls.forEach((url, index) => {
@@ -46,7 +55,7 @@ const Sphere = () => {
 
         const flagMaterial = new THREE.MeshBasicMaterial({
           map: texture,
-          side: THREE.DoubleSide, // Visível nos dois lados
+          side: THREE.DoubleSide, // Visível dos dois lados
         });
         const flagPlane = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1), flagMaterial);
 
@@ -55,7 +64,7 @@ const Sphere = () => {
           ((index % numLatitudes) - numLatitudes / 2) * (Math.PI / numLatitudes); // Linhas horizontais
 
         // Excluir bandeiras nos polos
-        if (latitude === Math.PI / 2 || latitude === -Math.PI / 2) return; // Excluir polo sul e polo norte
+        if (latitude === Math.PI / 2 || latitude === -Math.PI / 2) return; // Excluir polo norte e sul
 
         const isNearPole = Math.abs(latitude) > Math.PI / 3;
         const numFlagsThisLatitude = isNearPole ? 6 : flagUrls.length; // Máximo de 6 bandeiras próximo aos polos
