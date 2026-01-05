@@ -13,3 +13,9 @@ html, body {
   width: 100%; /* Preencher largura */
   height: 100%; /* Preencher altura */
 }
+
+.sphere-container {
+  width: 100%;
+  height: 100%;
+  background: #ddd;
+}

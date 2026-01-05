@@ -1,14 +1,16 @@
 import React, { useEffect, useRef } from "react";
+import './index.css';
 import * as THREE from "three";
-import flagUrls from "./flags"; // Importa URLs das bandeiras
+import flagUrls from "./flags"; // Importa as bandeiras (mude se quiser)
 
 const Sphere = () => {
   const sphereRef = useRef(null);
   const isDragging = useRef(false);
-  const previousMousePosition = useRef({ x: 0, y: 0 }); // Última posição do mouse
-  const selectedFlag = useRef(null); // Bandeira que está "hoverada"
-  const raycaster = new THREE.Raycaster(); // Raycaster para detecção precisa
+  const previousMousePosition = useRef({ x: 0, y: 0 }); 
+  const selectedFlag = useRef(null);
+  const raycaster = new THREE.Raycaster(); 
   const mouse = new THREE.Vector2(); // Posição do mouse
+  const flagData = useRef([]); // Para armazenar mapeamento das bandeiras (Mesh -> URL)
 
   useEffect(() => {
     const currentRef = sphereRef.current;
@@ -27,7 +29,7 @@ const Sphere = () => {
 
     scene.background = new THREE.Color(0xf0f0f0);
 
-    // Luzes da cena
+    // Iluminação
     const ambientLight = new THREE.AmbientLight(0xffffff, 1);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
     directionalLight.position.set(10, 10, 10);
@@ -39,7 +41,7 @@ const Sphere = () => {
     const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
     scene.add(sphereMesh);
 
-    // Adicionar as bandeiras na superfície da esfera
+    // Bandeiras na superfície da esfera
     const sphereGroup = new THREE.Group();
     const radius = 5; // Raio da superfície
     const numLatitudes = 10; // Número de latitude
@@ -74,20 +76,21 @@ const Sphere = () => {
         flagPlane.lookAt(0, 0, 0);
 
         sphereGroup.add(flagPlane);
+        flagData.current.push({ mesh: flagPlane, url }); // Mapear Mesh -> URL
       });
     });
 
     scene.add(sphereGroup);
     camera.position.z = 15;
 
-    // Função de animação para renderizar a cena
+    // Função de animação da esfera
     const animate = () => {
       renderer.render(scene, camera);
       requestAnimationFrame(animate);
     };
     animate();
 
-    // Função de hover detectando interseções
+    // Função de hover nas bandeiras
     const handleMouseMove = (event) => {
       const rect = currentRef.getBoundingClientRect();
       mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -108,12 +111,28 @@ const Sphere = () => {
           selectedFlag.current = flagPlane; // Atualizar a bandeira atual
         }
       } else if (selectedFlag.current) {
-        selectedFlag.current.scale.set(1, 1, 1); // Resetar caso nada esteja "hoverado"
+        selectedFlag.current.scale.set(1, 1, 1); 
         selectedFlag.current = null;
       }
     };
 
+    // Duplo clique para abrir a bandeira
+    const handleDoubleClick = (event) => {
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(sphereGroup.children);
+
+      if (intersects.length > 0) {
+        const clickedFlag = intersects[0].object;
+        const flagInfo = flagData.current.find((flag) => flag.mesh === clickedFlag);
+
+        if (flagInfo) {
+          window.open(flagInfo.url, "_blank"); // Abrir imagem em uma nova aba
+        }
+      }
+    };
+
     currentRef.addEventListener("mousemove", handleMouseMove);
+    currentRef.addEventListener("dblclick", handleDoubleClick); // Clicar duas vezes para abrir a bandeira
 
     // Controle de rotação com o mouse
     const handleMouseDown = (e) => {
@@ -141,7 +160,7 @@ const Sphere = () => {
     currentRef.addEventListener("mousemove", handleMouseMoveWhileDragging);
     currentRef.addEventListener("mouseup", handleMouseUp);
 
-    // Atualizar o renderizador na mudança de tamanho
+    // Renderizador para aumentar o tamanho da bandeira
     const handleResize = () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
       camera.aspect = window.innerWidth / window.innerHeight;
@@ -153,6 +172,7 @@ const Sphere = () => {
     return () => {
       window.removeEventListener("resize", handleResize);
       currentRef.removeEventListener("mousemove", handleMouseMove);
+      currentRef.removeEventListener("dblclick", handleDoubleClick); 
       currentRef.removeEventListener("mousedown", handleMouseDown);
       currentRef.removeEventListener("mousemove", handleMouseMoveWhileDragging);
       currentRef.removeEventListener("mouseup", handleMouseUp);
@@ -163,14 +183,7 @@ const Sphere = () => {
   }, []);
 
   return (
-    <div
-      ref={sphereRef}
-      style={{
-        width: "100%",
-        height: "100%",
-        background: "#ddd",
-      }}
-    ></div>
+    <div ref={sphereRef} className="sphere-container"></div>
   );
 };
 
