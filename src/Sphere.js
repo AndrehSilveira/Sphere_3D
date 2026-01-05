@@ -53,12 +53,16 @@ const Sphere = () => {
         });
         const flagPlane = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1), flagMaterial);
 
+        // Corrigir espelhamento horizontal
+        flagPlane.geometry.scale(-1, 1, 1); // Inverter o eixo X da geometria
+
         const latitude =
           ((index % numLatitudes) - numLatitudes / 2) * (Math.PI / numLatitudes);
 
-        if (latitude === Math.PI / 2 || latitude === -Math.PI / 2) return;
+        // Remover bandeiras muito próximas dos polos superiores/inferiores
+        if (Math.abs(latitude) > Math.PI / 3) return; // Excluir acima de ~60° ou abaixo de ~-60°
 
-        const numFlagsThisLatitude = Math.abs(latitude) > Math.PI / 3 ? 6 : flagUrls.length;
+        const numFlagsThisLatitude = flagUrls.length; // Distribuir uniformemente
         const longitude =
           ((index % numFlagsThisLatitude) / numFlagsThisLatitude) * Math.PI * 2;
 
